@@ -23,25 +23,26 @@
 # called "data.sqlite" in the current working directory which has at least a table
 # called "data".
 
-import scrapy
+from bs4 import BeautifulSoup
+from urllib.request import urlopen
 
-class RacingItem(scrapy.Item):
-    fin = scrapy.Field()
-    runner = scrapy.Field()
-    odds = scrapy.Field()
+website = "https://www.racenet.com.au/horse-racing-results/"
+rawSite = urlopen(website);
+rawHTML = rawSite.read();
+soup = BeautifulSoup(rawHTML, "html.parser")
+
+locData = []
 
 
-class RacingSpider(scrapy.Spider):
-    name = 'racenet.com.au'
-    allowed_domains = ['racenet.com.au']
-    start_urls = ['https://www.racenet.com.au/horse-racing-results/']
-    
-    def parse(self, response):
-    	for table in response.xpath('.//table[@class="tblLatestHorseResults"]'):
-		    rows = table.xpath('.//tr[@class="tr_res_runner"]')
-		    for row in rows:
-		        item = RacingItem()
-		        item['fin'] = row.xpath('.//td[@class="first"]/text()').extract()
-		        item['runner'] = row.xpath('.//td[2]/a[@class="link_red bold"]/text()').extract()
-		        item['odds'] = row.xpath('.//td[@class="res_odds sb res_td_light last"]/span/text()').extract()
-		        yield item
+today = soup.find_all('div', attrs={"class":"grid_3 alpha"})
+for tag in today:
+	linkData = tag.find_all("a", {"class":"link_red"})
+	for tag in linkData:
+		if debug:
+			print ("Location: ", tag.text)
+			print ("Link: ", tag["href"], "\n")
+		temp = {
+			"loc": tag.text,
+			"link": tag["href"]
+		}
+		locData.append(temp);
